@@ -1,5 +1,8 @@
 import { QueryClient, QueryFunction } from '@tanstack/react-query';
 
+const OLLAMA_URL = 'http://localhost:11434';
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000';
+
 async function throwIfResNotOk(res: Response) {
     if (!res.ok) {
         const text = (await res.text()) || res.statusText;
@@ -10,13 +13,16 @@ async function throwIfResNotOk(res: Response) {
 export async function apiRequest(
     method: string,
     url: string,
-    data?: unknown | undefined
+    data?: unknown
 ): Promise<Response> {
-    const res = await fetch(url, {
+    const isOllamaRequest = url.startsWith('/api/ollama');
+    const baseUrl = isOllamaRequest ? OLLAMA_URL : API_BASE_URL;
+    const finalUrl = isOllamaRequest ? url.replace('/api/ollama', '') : url;
+
+    const res = await fetch(`${baseUrl}${finalUrl}`, {
         method,
         headers: data ? { 'Content-Type': 'application/json' } : {},
         body: data ? JSON.stringify(data) : undefined,
-        credentials: 'include',
     });
 
     await throwIfResNotOk(res);
