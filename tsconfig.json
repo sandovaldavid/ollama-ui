@@ -1,17 +1,9 @@
 {
+    "include": ["src/**/*", "shared/**/*", "server/**/*"],
+    "exclude": ["node_modules", "build", "dist", "**/*.test.ts"],
     "files": [],
     "references": [
         { "path": "./tsconfig.app.json" },
         { "path": "./tsconfig.node.json" }
-    ],
-    "compilerOptions": {
-        "baseUrl": ".",
-        "paths": {
-            "@components/*": ["src/components/*"],
-            "@shared/*": ["src/shared/*"],
-            "@server/*": ["src/server/*"],
-            "@hooks/*": ["src/hooks/*"],
-            "@lib/*": ["src/lib/*"]
-        }
-    }
+    ]
 }
