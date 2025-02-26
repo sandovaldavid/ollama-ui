@@ -3,15 +3,18 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MessageSquarePlus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type { chats } from '@shared/schema';
 
-export function Sidebar() {
+type Chat = typeof chats.$inferSelect;
+
+interface SidebarProps {
+    chats?: Chat[];
+    onNewChat?: () => void;
+    onSelectChat?: (chatId: number) => void;
+}
+
+export function Sidebar({ chats = [], onNewChat, onSelectChat }: SidebarProps) {
     const [isCollapsed, setIsCollapsed] = useState(false);
-
-    // Aquí podríamos manejar el estado de los chats
-    const chats = [
-        { id: 1, title: 'Chat #1' },
-        { id: 2, title: 'Chat #2' },
-    ];
 
     return (
         <div
@@ -39,6 +42,7 @@ export function Sidebar() {
                         'w-full justify-start gap-2',
                         isCollapsed && 'justify-center px-0'
                     )}
+                    onClick={onNewChat}
                 >
                     <MessageSquarePlus className="h-4 w-4" />
                     {!isCollapsed && 'Nuevo Chat'}
@@ -57,6 +61,7 @@ export function Sidebar() {
                                     ? 'justify-center px-0'
                                     : 'justify-start'
                             )}
+                            onClick={() => onSelectChat?.(chat.id)}
                         >
                             <MessageSquarePlus className="h-4 w-4" />
                             {!isCollapsed && chat.title}
