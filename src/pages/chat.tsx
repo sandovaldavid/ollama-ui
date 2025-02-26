@@ -1,74 +1,99 @@
-import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
 import { Message } from '@/components/chat/message';
 import { MessageInput } from '@/components/chat/message-input';
 import { apiRequest } from '@/lib/queryClient';
-import type { Message as MessageType } from '@shared/schema';
+import type { messages as MessageType } from '@shared/schema';
+import { useParams } from 'react-router-dom';
+
+type Message = typeof MessageType.$inferSelect;
 
 export default function Chat() {
-    const [messages, setMessages] = useState<MessageType[]>([]);
+    const [messages, setMessages] = useState<Message[]>([]);
+    const { chatId } = useParams();
     const { toast } = useToast();
+
+    const messagesQuery = useQuery({
+        queryKey: ['messages', chatId],
+        queryFn: () =>
+            apiRequest('GET', `/api/chats/${chatId}/messages`).then((res) =>
+                res.json()
+            ),
+        enabled: !!chatId,
+    });
+
+    useEffect(() => {
+        if (messagesQuery.isError) {
+            toast({
+                title: 'Error',
+                description: 'Error al cargar los mensajes',
+                variant: 'destructive',
+            });
+        }
+    }, [messagesQuery.isError]);
 
     const chatMutation = useMutation({
         mutationFn: async (data: { prompt: string; files?: FileList }) => {
-            let formData = new FormData();
-            formData.append('prompt', data.prompt);
+            try {
+                const ollamaResponse = await apiRequest(
+                    'POST',
+                    '/api/ollama/api/generate',
+                    {
+                        model: 'deepseek-coder:6.7b',
+                        prompt: data.prompt,
+                    }
+                );
+                const ollamaData = await ollamaResponse.json();
 
-            if (data.files) {
-                Array.from(data.files).forEach((file, index) => {
-                    formData.append(`file${index}`, file);
+                const messages: Message[] = [
+                    {
+                        id: Date.now(),
+                        role: 'user' as const,
+                        content: data.prompt,
+                        chatId: Number(chatId),
+                        timestamp: new Date().toISOString(),
+                    },
+                    {
+                        id: Date.now() + 1,
+                        role: 'assistant' as const,
+                        content: ollamaData.response,
+                        chatId: Number(chatId),
+                        timestamp: new Date().toISOString(),
+                    },
+                ];
+
+                const saveResponse = await apiRequest(
+                    'POST',
+                    `/api/chats/${chatId}/messages`,
+                    {
+                        messages,
+                    }
+                );
+
+                return saveResponse.json();
+            } catch (error) {
+                toast({
+                    title: 'Error',
+                    description: 'Error al enviar el mensaje',
+                    variant: 'destructive',
                 });
+                throw error;
             }
-
-            let endpoint = '/api/chat';
-            if (data.prompt.startsWith('/code')) {
-                endpoint = '/api/chat/code';
-            } else if (data.prompt.startsWith('/image')) {
-                endpoint = '/api/chat/image';
-            } else if (data.prompt.startsWith('/paraphrase')) {
-                endpoint = '/api/chat/paraphrase';
-            }
-
-            const res = await apiRequest(
-                'POST',
-                endpoint,
-                data.files ? formData : { prompt: data.prompt }
-            );
-            return res.json();
-        },
-        onSuccess: (data) => {
-            setMessages((prev) => [
-                ...prev,
-                {
-                    id: prev.length + 2,
-                    role: 'assistant',
-                    content: data.response,
-                    timestamp: new Date(),
-                },
-            ]);
-        },
-        onError: () => {
-            toast({
-                title: 'Error',
-                description: 'No se pudo obtener una respuesta del AI',
-                variant: 'destructive',
-            });
         },
     });
 
     const handleSend = (message: string, files?: FileList) => {
-        setMessages((prev) => [
-            ...prev,
+        chatMutation.mutate(
+            { prompt: message, files },
             {
-                id: prev.length + 1,
-                role: 'user',
-                content: message,
-                timestamp: new Date(),
-            },
-        ]);
-        chatMutation.mutate({ prompt: message, files });
+                onSuccess: (data) => {
+                    // Los mensajes vienen de la BD con IDs correctos
+                    setMessages((prev) => [...prev, ...data]);
+                },
+            }
+        );
     };
 
     return (
@@ -76,15 +101,32 @@ export default function Chat() {
             <div className="flex-1 overflow-y-auto p-4 pb-24">
                 <Card className="mx-auto max-w-4xl">
                     <div className="space-y-4 p-4">
-                        {messages.map((message) => (
-                            <Message key={message.id} message={message} />
-                        ))}
-                        {chatMutation.isPending && (
+                        {messagesQuery.isLoading ? (
                             <div className="flex justify-center">
-                                <div className="animate-pulse text-muted-foreground">
-                                    AI está pensando...
+                                <div className="animate-pulse">
+                                    Cargando mensajes...
                                 </div>
                             </div>
+                        ) : messagesQuery.isError ? (
+                            <div className="text-destructive text-center">
+                                Error al cargar los mensajes
+                            </div>
+                        ) : (
+                            <>
+                                {messages.map((message) => (
+                                    <Message
+                                        key={message.id}
+                                        message={message}
+                                    />
+                                ))}
+                                {chatMutation.isPending && (
+                                    <div className="flex justify-center">
+                                        <div className="animate-pulse text-muted-foreground">
+                                            AI está pensando...
+                                        </div>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 </Card>
