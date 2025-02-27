@@ -10,7 +10,10 @@
         "preview": "vite preview",
         "lint:fix": "eslint . --ext .ts,.tsx --fix",
         "format": "prettier --write \"src/**/*.{ts,tsx}\"",
-        "format:check": "prettier --check \"src/**/*.{ts,tsx}\""
+        "format:check": "prettier --check \"src/**/*.{ts,tsx}\"",
+        "db:generate": "drizzle-kit generate",
+        "db:push": "drizzle-kit push",
+        "db:studio": "drizzle-kit studio"
     },
     "dependencies": {
         "@libsql/client": "^0.14.0",
