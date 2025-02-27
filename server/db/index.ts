@@ -6,4 +6,9 @@ const client = createClient({
     url: 'file:chat.db',
 });
 
-export const db = drizzle(client, { schema });
+export const sqliteClient = client;
+
+export const db = drizzle(client, {
+    schema,
+    logger: process.env.NODE_ENV === 'development',
+});
