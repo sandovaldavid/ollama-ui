@@ -1,6 +1,6 @@
 import { QueryClient, QueryFunction } from '@tanstack/react-query';
 
-const OLLAMA_URL = 'http://localhost:11434';
+const OLLAMA_URL = import.meta.env.VITE_OLLAMA_URL || 'https://ollama.com';
 const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
