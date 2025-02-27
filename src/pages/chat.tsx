@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import mongoose from 'mongoose';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
@@ -8,7 +9,9 @@ import { apiRequest } from '@/lib/queryClient';
 import type { IMessage as MessageType } from '@shared/schema';
 import { useParams, useLocation } from 'wouter';
 
-type Message = MessageType;
+type Message = MessageType & {
+    _id: number;
+};
 
 export default function Chat() {
     const [messages, setMessages] = useState<Message[]>([]);
@@ -132,7 +135,7 @@ export default function Chat() {
                             <>
                                 {messages.map((message) => (
                                     <Message
-                                        key={message.id}
+                                        key={message._id.toString()}
                                         message={message}
                                     />
                                 ))}
