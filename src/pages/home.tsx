@@ -7,6 +7,7 @@ import {
 import { Code2, Brain, Wrench, Sparkles } from 'lucide-react';
 import { MessageInput } from '@/components/chat/message-input';
 import { useLocation } from 'wouter';
+import { apiRequest } from '@/lib/queryClient';
 
 const recommendations = [
     {
@@ -36,8 +37,12 @@ const recommendations = [
 export default function Home() {
     const [_, setLocation] = useLocation();
 
-    const handleSendMessage = (message: string) => {
-        setLocation('/chat');
+    const handleSendMessage = async (message: string) => {
+        const response = await apiRequest('POST', '/api/chats', {
+            title: 'Nuevo Chat',
+        });
+        const chat = await response.json();
+        setLocation(`/chat/${chat.id}`);
     };
 
     return (
