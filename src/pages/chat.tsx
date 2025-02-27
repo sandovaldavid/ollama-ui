@@ -41,7 +41,7 @@ export default function Chat() {
                     'POST',
                     '/api/ollama/api/generate',
                     {
-                        model: 'deepseek-coder:6.7b',
+                        model: import.meta.env.VITE_OLLAMA_MODEL,
                         prompt: data.prompt,
                     }
                 );
