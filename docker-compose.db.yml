@@ -1,0 +1,45 @@
+services:
+    mongodb:
+        image: mongo:latest
+        container_name: ollama-ia-mongodb
+        ports:
+            - '27017:27017'
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+            MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+            MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
+        volumes:
+            - mongodb_data:/data/db
+            - mongodb_config:/data/configdb
+        networks:
+            - ollama-network
+        command: mongod --auth
+
+    mongo-express:
+        image: mongo-express:latest
+        container_name: ollama-ia-mongo-express
+        ports:
+            - '8081:8081'
+        environment:
+            ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USER}
+            ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWORD}
+            ME_CONFIG_MONGODB_SERVER: mongodb
+            ME_CONFIG_MONGODB_PORT: 27017
+            ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
+            ME_CONFIG_MONGODB_AUTH_DATABASE: admin
+            ME_CONFIG_MONGODB_AUTH_USERNAME: ${MONGO_USER}
+            ME_CONFIG_MONGODB_AUTH_PASSWORD: ${MONGO_PASSWORD}
+            ME_CONFIG_BASICAUTH_USERNAME: ${USERNAME_MONGO_EXPRESS}
+            ME_CONFIG_BASICAUTH_PASSWORD: ${PASSWORD_MONGO_EXPRESS}
+        depends_on:
+            - mongodb
+        networks:
+            - ollama-network
+
+volumes:
+    mongodb_data:
+    mongodb_config:
+
+networks:
+    ollama-network:
+        driver: bridge
