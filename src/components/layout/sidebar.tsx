@@ -3,9 +3,11 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MessageSquarePlus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { chats } from '@shared/schema';
+import type { IChat } from '@shared/schema';
 
-type Chat = typeof chats.$inferSelect;
+type Chat = IChat & {
+    _id: number;
+};
 
 interface SidebarProps {
     chats?: Chat[];
@@ -53,7 +55,7 @@ export function Sidebar({ chats = [], onNewChat, onSelectChat }: SidebarProps) {
                 <div className="space-y-2 p-2">
                     {chats.map((chat) => (
                         <Button
-                            key={chat.id}
+                            key={chat._id.toString()}
                             variant="ghost"
                             className={cn(
                                 'w-full',
@@ -61,7 +63,7 @@ export function Sidebar({ chats = [], onNewChat, onSelectChat }: SidebarProps) {
                                     ? 'justify-center px-0'
                                     : 'justify-start'
                             )}
-                            onClick={() => onSelectChat?.(chat.id)}
+                            onClick={() => onSelectChat?.(chat._id)}
                         >
                             <MessageSquarePlus className="h-4 w-4" />
                             {!isCollapsed && chat.title}
