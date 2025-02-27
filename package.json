@@ -4,7 +4,7 @@
     "version": "0.0.0",
     "type": "module",
     "scripts": {
-        "dev": "vite",
+        "dev": "concurrently \"bun run dev:server\" \"bun run dev:client\"",
         "build": "tsc -b && vite build",
         "lint": "eslint . --ext .ts",
         "preview": "vite preview",
@@ -13,7 +13,9 @@
         "format:check": "prettier --check \"src/**/*.{ts,tsx}\"",
         "db:generate": "drizzle-kit generate",
         "db:push": "drizzle-kit push",
-        "db:studio": "drizzle-kit studio"
+        "db:studio": "drizzle-kit studio",
+        "dev:server": "tsx --tsconfig tsconfig.server.json server/index.ts",
+        "dev:client": "vite"
     },
     "dependencies": {
         "@libsql/client": "^0.14.0",
@@ -43,11 +45,13 @@
         "@replit/vite-plugin-shadcn-theme-json": "^0.0.4",
         "@tailwindcss/typography": "^0.5.16",
         "@tanstack/react-query": "^5.66.9",
+        "@types/cors": "^2.8.17",
         "@types/express": "^5.0.0",
         "better-sqlite3": "^11.8.1",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "cmdk": "^1.0.4",
+        "cors": "^2.8.5",
         "drizzle-orm": "^0.40.0",
         "embla-carousel-react": "^8.5.2",
         "express": "^4.21.2",
@@ -75,6 +79,7 @@
         "@vitejs/plugin-react-swc": "^3.8.0",
         "autoprefixer": "10.4.17",
         "bun-types": "^1.2.3",
+        "concurrently": "^9.1.2",
         "drizzle-kit": "^0.30.5",
         "eslint": "^9.21.0",
         "eslint-config-prettier": "^10.0.1",
@@ -85,6 +90,8 @@
         "postcss": "8.4.35",
         "prettier": "^3.5.2",
         "tailwindcss": "3.4.1",
+        "tsconfig-paths": "^4.2.0",
+        "tsx": "^4.19.3",
         "typescript": "~5.7.2",
         "typescript-eslint": "^8.24.1",
         "vite": "^6.2.0"
