@@ -46,12 +46,12 @@ export default function Home() {
             const chat = await chatResponse.json();
 
             // 2. Guardar el mensaje inicial
-            await apiRequest('POST', `/api/chats/${chat.id}/messages`, {
+            await apiRequest('POST', `/api/chats/${chat._id}/messages`, {
                 messages: [
                     {
                         role: 'user',
                         content: message,
-                        chatId: chat.id,
+                        chatId: chat._id, // Use MongoDB _id instead of .id
                         timestamp: new Date().toISOString(),
                     },
                 ],
@@ -71,19 +71,19 @@ export default function Home() {
             const ollamaData = await ollamaResponse.json();
 
             // 4. Guardar la respuesta del asistente
-            await apiRequest('POST', `/api/chats/${chat.id}/messages`, {
+            await apiRequest('POST', `/api/chats/${chat._id}/messages`, {
                 messages: [
                     {
                         role: 'assistant',
                         content: ollamaData.response,
-                        chatId: chat.id,
+                        chatId: chat._id, // Use MongoDB _id instead of .id
                         timestamp: new Date().toISOString(),
                     },
                 ],
             });
 
             // 5. Finalmente redirigir al chat
-            setLocation(`/chat/${chat.id}`);
+            setLocation(`/chat/${chat._id}`);
         } catch (error) {
             console.error('Error:', error);
         }
