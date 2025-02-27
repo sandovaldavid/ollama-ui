@@ -21,6 +21,14 @@ export default defineConfig({
             '@server': path.resolve(__dirname, './server'),
         },
     },
+    server: {
+        proxy: {
+            '/api': {
+                target: 'http://localhost:3000',
+                changeOrigin: true,
+            },
+        },
+    },
     build: {
         outDir: path.resolve(__dirname, 'dist/public'),
         emptyOutDir: true,
