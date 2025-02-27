@@ -10,6 +10,7 @@ const __dirname = dirname(__filename);
 // https://vite.dev/config/
 export default defineConfig({
     plugins: [react(), themePlugin()],
+    envPrefix: 'VITE_',
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './src'),
