@@ -1,9 +1,17 @@
 import express from 'express';
 import { eq } from 'drizzle-orm';
-import { chats, messages } from '@shared/schema';
+import { chats, messages } from '../../shared/schema';
 import { db } from '../db/index';
 
 const router = express.Router();
+
+router.get('/api/chats', async (_req, res) => {
+    const result = await db
+        .select()
+        .from(chats)
+        .orderBy(chats.createdAt);
+    res.json(result);
+});
 
 // Crear nuevo chat
 router.post('/api/chats', async (req, res) => {
