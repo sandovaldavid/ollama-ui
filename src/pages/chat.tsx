@@ -41,6 +41,12 @@ export default function Chat() {
         }
     }, [messagesQuery.isError]);
 
+    useEffect(() => {
+        if (messagesQuery.data) {
+            setMessages(messagesQuery.data);
+        }
+    }, [messagesQuery.data]);
+
     const chatMutation = useMutation({
         mutationFn: async (data: { prompt: string; files?: FileList }) => {
             try {
