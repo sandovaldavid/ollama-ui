@@ -13,6 +13,7 @@ function Router() {
             <Switch>
                 <Route path="/" component={Home} />
                 <Route path="/chat" component={Chat} />
+                <Route path="/chat/:chatId" component={Chat} />
                 <Route component={NotFound} />
             </Switch>
         </MainLayout>
