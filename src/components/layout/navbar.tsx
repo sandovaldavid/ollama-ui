@@ -17,7 +17,9 @@ export function Navbar() {
         <nav className="border-b">
             <div className="flex h-16 items-center px-4">
                 <div className="flex-1">
-                    <h1 className="text-xl font-bold">DeepSeek Chat</h1>
+                    <a href="/">
+                        <h1 className="text-xl font-bold">DeepSeek Chat</h1>
+                    </a>
                 </div>
                 <div className="flex items-center gap-4">
                     <DropdownMenu>
