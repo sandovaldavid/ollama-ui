@@ -5,10 +5,10 @@ import { Card } from '@/components/ui/card';
 import { Message } from '@/components/chat/message';
 import { MessageInput } from '@/components/chat/message-input';
 import { apiRequest } from '@/lib/queryClient';
-import type { messages as MessageType } from '@shared/schema';
+import type { IMessage as MessageType } from '@shared/schema';
 import { useParams, useLocation } from 'wouter';
 
-type Message = typeof MessageType.$inferSelect;
+type Message = MessageType;
 
 export default function Chat() {
     const [messages, setMessages] = useState<Message[]>([]);
@@ -50,11 +50,6 @@ export default function Chat() {
     const chatMutation = useMutation({
         mutationFn: async (data: { prompt: string; files?: FileList }) => {
             try {
-                console.log('Enviando solicitud a Ollama:', {
-                    model: import.meta.env.VITE_OLLAMA_MODEL,
-                    prompt: data.prompt,
-                });
-
                 const ollamaResponse = await apiRequest(
                     'POST',
                     '/api/ollama/api/generate',
@@ -67,19 +62,22 @@ export default function Chat() {
 
                 const ollamaData = await ollamaResponse.json();
 
-                const messages: Message[] = [
+                // Ensure chatId is a valid MongoDB ObjectId string
+                if (!mongoose.Types.ObjectId.isValid(chatId)) {
+                    throw new Error('Invalid chat ID');
+                }
+
+                const messages = [
                     {
-                        id: Date.now(),
-                        role: 'user',
+                        role: 'user' as const,
                         content: data.prompt,
-                        chatId: Number(chatId),
+                        chatId, // Use the string ID directly
                         timestamp: new Date().toISOString(),
                     },
                     {
-                        id: Date.now() + 1,
-                        role: 'assistant',
+                        role: 'assistant' as const,
                         content: ollamaData.response,
-                        chatId: Number(chatId),
+                        chatId,
                         timestamp: new Date().toISOString(),
                     },
                 ];
