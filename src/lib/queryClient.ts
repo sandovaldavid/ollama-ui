@@ -20,13 +20,20 @@ export async function apiRequest(
     const baseUrl = isOllamaRequest ? OLLAMA_URL : API_BASE_URL;
     const finalUrl = isOllamaRequest ? url.replace('/api/ollama', '') : url;
 
+    console.log('Request URL:', `${baseUrl}${finalUrl}`);
+    console.log('Request data:', data);
+
     const res = await fetch(`${baseUrl}${finalUrl}`, {
         method,
         headers: data ? { 'Content-Type': 'application/json' } : {},
         body: data ? JSON.stringify(data) : undefined,
     });
 
-    await throwIfResNotOk(res);
+    if (!res.ok) {
+        console.error('API Error:', await res.text());
+        throw new Error(`API request failed: ${res.status}`);
+    }
+
     return res;
 }
 
