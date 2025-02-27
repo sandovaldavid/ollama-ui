@@ -6,14 +6,21 @@ import { Message } from '@/components/chat/message';
 import { MessageInput } from '@/components/chat/message-input';
 import { apiRequest } from '@/lib/queryClient';
 import type { messages as MessageType } from '@shared/schema';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'wouter';
 
 type Message = typeof MessageType.$inferSelect;
 
 export default function Chat() {
     const [messages, setMessages] = useState<Message[]>([]);
     const { chatId } = useParams();
+    const [, setLocation] = useLocation();
     const { toast } = useToast();
+
+    if (!chatId) {
+        console.log('No hay chatId, redirigiendo a /');
+        setLocation('/');
+        return null;
+    }
 
     const messagesQuery = useQuery({
         queryKey: ['messages', chatId],
@@ -37,27 +44,34 @@ export default function Chat() {
     const chatMutation = useMutation({
         mutationFn: async (data: { prompt: string; files?: FileList }) => {
             try {
+                console.log('Enviando solicitud a Ollama:', {
+                    model: import.meta.env.VITE_OLLAMA_MODEL,
+                    prompt: data.prompt,
+                });
+
                 const ollamaResponse = await apiRequest(
                     'POST',
                     '/api/ollama/api/generate',
                     {
                         model: import.meta.env.VITE_OLLAMA_MODEL,
                         prompt: data.prompt,
+                        stream: false,
                     }
                 );
+
                 const ollamaData = await ollamaResponse.json();
 
                 const messages: Message[] = [
                     {
                         id: Date.now(),
-                        role: 'user' as const,
+                        role: 'user',
                         content: data.prompt,
                         chatId: Number(chatId),
                         timestamp: new Date().toISOString(),
                     },
                     {
                         id: Date.now() + 1,
-                        role: 'assistant' as const,
+                        role: 'assistant',
                         content: ollamaData.response,
                         chatId: Number(chatId),
                         timestamp: new Date().toISOString(),
@@ -67,13 +81,12 @@ export default function Chat() {
                 const saveResponse = await apiRequest(
                     'POST',
                     `/api/chats/${chatId}/messages`,
-                    {
-                        messages,
-                    }
+                    { messages }
                 );
 
                 return saveResponse.json();
             } catch (error) {
+                console.error('Error en la mutación:', error);
                 toast({
                     title: 'Error',
                     description: 'Error al enviar el mensaje',
