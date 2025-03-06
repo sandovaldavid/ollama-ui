@@ -23,6 +23,63 @@ router.post('/api/chats', async (req, res) => {
     }
 });
 
+router.patch('/api/chats/:chatId', async (req, res) => {
+    const { chatId } = req.params;
+    const { title } = req.body;
+
+    try {
+        if (!mongoose.Types.ObjectId.isValid(chatId)) {
+            return res.status(400).json({ error: 'Invalid chat ID format' });
+        }
+
+        if (!title || title.trim() === '') {
+            return res.status(400).json({ error: 'Title is required' });
+        }
+
+        const updatedChat = await Chat.findByIdAndUpdate(
+            chatId,
+            { title: title.trim(), updatedAt: new Date() },
+            { new: true }
+        );
+
+        if (!updatedChat) {
+            return res.status(404).json({ error: 'Chat not found' });
+        }
+
+        res.json(updatedChat);
+    } catch (error) {
+        console.error('Error updating chat:', error);
+        res.status(500).json({ error: 'Error updating chat' });
+    }
+});
+
+router.delete('/api/chats/:chatId', async (req, res) => {
+    const { chatId } = req.params;
+
+    try {
+        if (!mongoose.Types.ObjectId.isValid(chatId)) {
+            return res.status(400).json({ error: 'Invalid chat ID format' });
+        }
+
+        const deletedChat = await Chat.findByIdAndDelete(chatId);
+
+        if (!deletedChat) {
+            return res.status(404).json({ error: 'Chat not found' });
+        }
+
+        await Message.deleteMany({
+            chatId: new mongoose.Types.ObjectId(chatId),
+        });
+
+        res.json({
+            message: 'Chat and associated messages deleted successfully',
+        });
+    } catch (error) {
+        console.error('Error deleting chat:', error);
+        res.status(500).json({ error: 'Error deleting chat' });
+    }
+});
+
 router.post('/api/chats/:chatId/messages', async (req, res) => {
     const { chatId } = req.params;
     const newMessages = req.body.messages;
