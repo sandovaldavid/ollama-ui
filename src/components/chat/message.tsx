@@ -1,8 +1,8 @@
 import { Card } from '@/components/ui/card';
 import { Bot, User } from 'lucide-react';
-import type { messages as MessageType } from '@shared/schema';
+import type { IMessage } from '@shared/schema';
 
-type Message = typeof MessageType.$inferSelect;
+type Message = IMessage
 interface MessageProps {
     message: Message;
 }
