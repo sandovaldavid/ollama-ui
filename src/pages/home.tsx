@@ -19,6 +19,16 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 
+const formatAIResponse = (response: string): string => {
+    let formattedResponse = response.replace(/<think>[\s\S]*?<\/think>/g, '');
+
+    formattedResponse = formattedResponse.replace(/<\/?think>/g, '');
+
+    formattedResponse = formattedResponse.replace(/\n{3,}/g, '\n\n').trim();
+
+    return formattedResponse;
+};
+
 const recommendations = [
     {
         icon: <Code2 className="w-8 h-8" />,
@@ -118,13 +128,16 @@ export default function Home() {
 
             const ollamaData = await ollamaResponse.json();
 
+            // Formatear la respuesta antes de guardarla
+            const formattedResponse = formatAIResponse(ollamaData.response);
+
             // 4. Guardar la respuesta del asistente
             setLoadingState('Guardando la respuesta...');
             await apiRequest('POST', `/api/chats/${chat._id}/messages`, {
                 messages: [
                     {
                         role: 'assistant',
-                        content: ollamaData.response,
+                        content: formattedResponse,
                         chatId: chat._id,
                         timestamp: new Date().toISOString(),
                     },
