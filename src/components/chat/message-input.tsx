@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Send, Paperclip, Command, X } from 'lucide-react';
@@ -11,6 +11,9 @@ import {
 interface MessageInputProps {
     onSend: (message: string, files?: FileList) => void;
     disabled?: boolean;
+    value?: string;
+    onChange?: (value: string) => void;
+    placeholder?: string;
 }
 
 const commands = [
@@ -23,12 +26,25 @@ const commands = [
     },
 ];
 
-export function MessageInput({ onSend, disabled }: MessageInputProps) {
-    const [message, setMessage] = useState('');
+export function MessageInput({
+    onSend,
+    disabled,
+    value,
+    onChange,
+    placeholder = 'Escribe un mensaje o usa / para comandos...',
+}: MessageInputProps) {
+    const [message, setMessage] = useState(value || '');
     const [showCommands, setShowCommands] = useState(false);
     const [activeCommand, setActiveCommand] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    // Sincronizar el estado local con el prop value cuando cambie externamente
+    useEffect(() => {
+        if (value !== undefined) {
+            setMessage(value);
+        }
+    }, [value]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -44,7 +60,12 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
                 finalMessage.trim(),
                 fileInputRef.current?.files || undefined
             );
-            setMessage('');
+
+            // Solo limpiamos localmente si no es un componente controlado
+            if (onChange === undefined) {
+                setMessage('');
+            }
+
             setActiveCommand(null);
             if (fileInputRef.current) {
                 fileInputRef.current.value = '';
@@ -64,7 +85,7 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
             const commandEndPosition = 0;
             if (cursorPosition <= commandEndPosition) {
                 e.preventDefault();
-                setMessage('');
+                updateMessage('');
                 setActiveCommand(null);
             }
         }
@@ -72,9 +93,17 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
 
     const handleCommandClick = (command: string) => {
         setActiveCommand(command);
-        setMessage('');
+        updateMessage('');
         setShowCommands(false);
         textareaRef.current?.focus();
+    };
+
+    // Función unificada para actualizar el mensaje
+    const updateMessage = (newValue: string) => {
+        setMessage(newValue);
+        if (onChange) {
+            onChange(newValue);
+        }
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -86,7 +115,7 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
                 const command = commandMatch[0];
                 if (commands.some((cmd) => cmd.label === command)) {
                     setActiveCommand(command);
-                    setMessage(newValue.slice(command.length).trim());
+                    updateMessage(newValue.slice(command.length).trim());
                     return;
                 }
             }
@@ -95,13 +124,18 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
             }
         }
 
-        setMessage(newValue);
+        updateMessage(newValue);
     };
 
     const handleFileChange = () => {
         if (message.trim() && fileInputRef.current?.files?.length) {
             handleSubmit({ preventDefault: () => {} } as React.FormEvent);
         }
+    };
+
+    const handleClearCommand = () => {
+        setActiveCommand(null);
+        updateMessage('');
     };
 
     return (
@@ -122,10 +156,7 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
                             <button
                                 type="button"
                                 className="ml-1 hover:text-primary/80"
-                                onClick={() => {
-                                    setMessage('');
-                                    setActiveCommand(null);
-                                }}
+                                onClick={handleClearCommand}
                             >
                                 <X className="h-3 w-3" />
                             </button>
@@ -139,7 +170,7 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
                         placeholder={
                             activeCommand
                                 ? 'Escribe tu mensaje...'
-                                : 'Escribe un mensaje o usa / para comandos...'
+                                : placeholder
                         }
                         className={`resize-none pr-10 ${activeCommand ? 'pl-28' : ''}`}
                         disabled={disabled}
